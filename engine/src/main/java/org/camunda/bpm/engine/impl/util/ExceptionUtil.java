@@ -181,6 +181,18 @@ public class ExceptionUtil {
     return false;
   }
 
+  public static Boolean isTransactionRetryException(Throwable cause) {
+    List<SQLException> relatedSqlExceptions = findRelatedSqlExceptions(cause);
+    for (SQLException exception : relatedSqlExceptions) {
+      if (exception.getMessage().toLowerCase().contains("restart transaction")
+          || exception.getMessage().toLowerCase().contains("retry txn")) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public static BatchExecutorException findBatchExecutorException(Throwable exception) {
     Throwable cause = exception;
     do {

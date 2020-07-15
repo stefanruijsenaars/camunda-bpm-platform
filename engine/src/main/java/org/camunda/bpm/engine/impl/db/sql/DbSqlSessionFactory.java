@@ -86,6 +86,8 @@ public class DbSqlSessionFactory implements SessionFactory {
 
   public static final Map<String, String> databaseSpecificDistinct = new HashMap<>();
 
+  public static final Map<String, String> databaseSpecificNumericCast = new HashMap<>();
+
   public static final Map<String, Map<String, String>> dbSpecificConstants = new HashMap<>();
 
   public static final Map<String, String> databaseSpecificDaysComparator = new HashMap<>();
@@ -267,6 +269,8 @@ public class DbSqlSessionFactory implements SessionFactory {
     databaseSpecificLimitBeforeNativeQueryStatements.put(POSTGRES, "");
     databaseSpecificDistinct.put(POSTGRES, "distinct");
 
+    databaseSpecificNumericCast.put(POSTGRES, "::NUMERIC");
+
     databaseSpecificCountDistinctBeforeStart.put(POSTGRES, "SELECT COUNT(*) FROM (SELECT DISTINCT");
     databaseSpecificCountDistinctBeforeEnd.put(POSTGRES, "");
     databaseSpecificCountDistinctAfterEnd.put(POSTGRES, ") countDistinct");
@@ -285,7 +289,8 @@ public class DbSqlSessionFactory implements SessionFactory {
     databaseSpecificFalseConstant.put(POSTGRES, "false");
     databaseSpecificIfNull.put(POSTGRES, "COALESCE");
 
-    databaseSpecificDaysComparator.put(POSTGRES, "EXTRACT (DAY FROM #{currentTimestamp} - ${date}) >= ${days}");
+    // CRDB doesn't currently support DAY extraction from intervals. The following is a workaround:
+    databaseSpecificDaysComparator.put(POSTGRES, "CAST( EXTRACT (HOUR FROM #{currentTimestamp} - ${date}) / 24 AS INT ) >= ${days}");
 
     databaseSpecificCollationForCaseSensitivity.put(POSTGRES, "");
 

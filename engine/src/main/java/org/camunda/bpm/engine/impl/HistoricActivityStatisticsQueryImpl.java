@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import org.camunda.bpm.engine.history.HistoricActivityStatistics;
 import org.camunda.bpm.engine.history.HistoricActivityStatisticsQuery;
+import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
@@ -34,6 +35,7 @@ public class HistoricActivityStatisticsQueryImpl extends AbstractQuery<HistoricA
   private static final long serialVersionUID = 1L;
 
   protected String processDefinitionId;
+  protected String databaseType;
 
   protected boolean includeFinished;
   protected boolean includeCanceled;
@@ -50,6 +52,7 @@ public class HistoricActivityStatisticsQueryImpl extends AbstractQuery<HistoricA
   public HistoricActivityStatisticsQueryImpl(String processDefinitionId, CommandExecutor commandExecutor) {
     super(commandExecutor);
     this.processDefinitionId = processDefinitionId;
+    this.databaseType = Context.getProcessEngineConfiguration().getDatabaseType();
   }
 
   public HistoricActivityStatisticsQuery includeFinished() {
@@ -154,4 +157,7 @@ public class HistoricActivityStatisticsQueryImpl extends AbstractQuery<HistoricA
     return includeIncidents;
   }
 
+  public String getDatabaseType() {
+    return databaseType;
+  }
 }
