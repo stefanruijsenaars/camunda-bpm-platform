@@ -84,6 +84,10 @@ public abstract class DbOperation implements Recyclable {
   public void setState(State state) {
     this.state = state;
   }
+  
+  public boolean isIgnorable() {
+    
+  }
 
   public Exception getFailure() {
     return failure;

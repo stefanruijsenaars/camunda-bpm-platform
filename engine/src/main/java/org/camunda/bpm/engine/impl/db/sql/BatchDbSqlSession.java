@@ -140,7 +140,7 @@ public class BatchDbSqlSession extends DbSqlSession {
       Exception failure,
       List<DbOperation> failedOperations) {
     boolean failureHandled = false;
-    boolean isTransactionRetry = (failure == null)? false : ExceptionUtil.isTransactionRetryException(failure);
+//    boolean isTransactionRetry = (failure == null)? false : ExceptionUtil.isTransactionRetryException(failure);
 
     for (int i = 0; i < statementResults.length; i++) {
       int statementResult = statementResults[i];
@@ -180,9 +180,9 @@ public class BatchDbSqlSession extends DbSqlSession {
 
       if (operation.isFailed()) {
         failedOperations.add(operation); // the operation is added to the list only if it's marked as failed
-        if (isTransactionRetry) {
-          break;
-        }
+//        if (isTransactionRetry) {
+//          break;
+//        }
       }
     }
 

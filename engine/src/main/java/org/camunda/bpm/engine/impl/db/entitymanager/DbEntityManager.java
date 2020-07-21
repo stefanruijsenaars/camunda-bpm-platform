@@ -390,6 +390,9 @@ public class DbEntityManager implements Session, EntityLoadListener {
   protected void handleConcurrentModification(DbOperation dbOperation) {
     boolean isHandled = false;
 
+    // TODO: if we know that we cannot continue with the current tx, we should
+    // not accept that an optimistic locking listener ignores the concurrent modification
+    
     if(optimisticLockingListeners != null) {
       for (OptimisticLockingListener optimisticLockingListener : optimisticLockingListeners) {
         if(optimisticLockingListener.getEntityType() == null
@@ -407,6 +410,17 @@ public class DbEntityManager implements Session, EntityLoadListener {
       }
     }
 
+    if (isHandled) {
+      if (isCockroachDb) {
+        retry;
+        // TODO: must signal interceptor to retry command in this case
+        // TODO: must verify that command objects can be executed more than once (i.e.
+        // they should not gather state that changes their behavior between invocations)
+        
+      } else {
+        ignore;
+      }
+    }
     if(!isHandled) {
       throw LOG.concurrentUpdateDbEntityException(dbOperation);
     }

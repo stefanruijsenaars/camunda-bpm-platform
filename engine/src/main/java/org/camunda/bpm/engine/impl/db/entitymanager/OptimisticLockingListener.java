@@ -44,6 +44,10 @@ public interface OptimisticLockingListener {
    *
    * @param operation the failed operation.
    */
-  void failedOperation(DbOperation operation);
+  OptimisticLockingResult failedOperation(DbOperation operation);
 
+  enum OptimisticLockingResult {
+    IGNORED,
+    RETRY;
+  }
 }
