@@ -181,7 +181,7 @@ public class ExceptionUtil {
     return false;
   }
 
-  public static Boolean isTransactionRetryException(Throwable cause) {
+  public static Boolean checkCrdbTransactionRetryException(Throwable cause) {
     List<SQLException> relatedSqlExceptions = findRelatedSqlExceptions(cause);
     for (SQLException exception : relatedSqlExceptions) {
       String errorMessage = exception.getMessage().toLowerCase();

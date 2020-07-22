@@ -35,6 +35,7 @@ public abstract class DbOperation implements Recyclable {
   protected int rowsAffected;
   protected Exception failure;
   protected State state;
+  protected boolean ignorable;
 
   /**
    * The type of the DbEntity this operation is executed on.
@@ -83,6 +84,14 @@ public abstract class DbOperation implements Recyclable {
 
   public void setState(State state) {
     this.state = state;
+  }
+
+  public boolean isIgnorable() {
+    return ignorable;
+  }
+
+  public void setIgnorable(boolean ignorable) {
+    this.ignorable = ignorable;
   }
 
   public Exception getFailure() {

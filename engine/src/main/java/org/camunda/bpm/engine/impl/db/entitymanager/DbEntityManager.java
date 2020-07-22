@@ -388,36 +388,30 @@ public class DbEntityManager implements Session, EntityLoadListener {
    * @throws OptimisticLockingException if there is no handler for the failure
    */
   protected void handleConcurrentModification(DbOperation dbOperation) {
-    boolean isHandled = false;
+    OptimisticLockingResult handlingResult = OptimisticLockingResult.THROW;
 
     if(optimisticLockingListeners != null) {
       for (OptimisticLockingListener optimisticLockingListener : optimisticLockingListeners) {
         if(optimisticLockingListener.getEntityType() == null
             || optimisticLockingListener.getEntityType().isAssignableFrom(dbOperation.getEntityType())) {
-          optimisticLockingListener.failedOperation(dbOperation);
-          isHandled = true;
+          handlingResult = optimisticLockingListener.failedOperation(dbOperation);
         }
       }
     }
 
-    if (!isHandled && Context.getProcessEngineConfiguration().isSkipHistoryOptimisticLockingExceptions()) {
-      DbEntity dbEntity = ((DbEntityOperation) dbOperation).getEntity();
-      if (dbEntity instanceof HistoricEntity || isHistoricByteArray(dbEntity)) {
-        isHandled = true;
-      }
+    if (OptimisticLockingResult.THROW.equals(handlingResult)
+        && dbOperation.isIgnorable()) {
+        handlingResult = OptimisticLockingResult.IGNORE;
     }
 
-    if(!isHandled) {
-      throw LOG.concurrentUpdateDbEntityException(dbOperation);
-    }
-  }
-
-  protected boolean isHistoricByteArray(DbEntity dbEntity) {
-    if (dbEntity instanceof ByteArrayEntity) {
-      ByteArrayEntity byteArrayEntity = (ByteArrayEntity) dbEntity;
-      return byteArrayEntity.getType().equals(ResourceTypes.HISTORY.getValue());
-    } else {
-      return false;
+    switch (handlingResult) {
+      case RETRY:
+        throw LOG.crdbTransactionRetryException(dbOperation);
+      case IGNORE:
+        break;
+      case THROW:
+      default:
+        throw LOG.concurrentUpdateDbEntityException(dbOperation);
     }
   }
 

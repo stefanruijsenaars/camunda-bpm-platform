@@ -17,10 +17,13 @@
 package org.camunda.bpm.engine.impl.cmd;
 
 import org.camunda.bpm.engine.impl.Page;
+import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.db.DbEntity;
 import org.camunda.bpm.engine.impl.db.entitymanager.OptimisticLockingListener;
+import org.camunda.bpm.engine.impl.db.entitymanager.OptimisticLockingResult;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbEntityOperation;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperation;
+import org.camunda.bpm.engine.impl.db.sql.DbSqlSessionFactory;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.jobexecutor.AcquiredJobs;
@@ -104,12 +107,21 @@ public class AcquireJobsCmd implements Command<AcquiredJobs>, OptimisticLockingL
     job.setLockExpirationTime(gregorianCalendar.getTime());
   }
 
+  @Override
   public Class<? extends DbEntity> getEntityType() {
     return AcquirableJobEntity.class;
   }
 
-  public void failedOperation(DbOperation operation) {
-    if (operation instanceof DbEntityOperation) {
+  @Override
+  public OptimisticLockingResult failedOperation(DbOperation operation) {
+
+    // When CockroachDB is used, the transaction can't be
+    // continued since the OLE can't be ignored, so it's completely retried.
+    String databaseType = Context.getCommandContext().getProcessEngineConfiguration().getDatabaseType();
+    if (!operation.isIgnorable() && DbSqlSessionFactory.CRDB.equals(databaseType)) {
+
+      return OptimisticLockingResult.RETRY;
+    } else if (operation.isIgnorable() && operation instanceof DbEntityOperation) {
 
       DbEntityOperation entityOperation = (DbEntityOperation) operation;
       if(AcquirableJobEntity.class.isAssignableFrom(entityOperation.getEntityType())) {
@@ -117,7 +129,14 @@ public class AcquireJobsCmd implements Command<AcquiredJobs>, OptimisticLockingL
         acquiredJobs.removeJobId(entityOperation.getEntity().getId());
       }
 
+      // When the job that failed the lock with an OLE is removed,
+      // we suppress the OLE.
+      return OptimisticLockingResult.IGNORE;
     }
+
+    // If none of the conditions are satisfied, this might indicate a bug,
+    // so we throw the OLE.
+    return OptimisticLockingResult.THROW;
   }
 
 }
