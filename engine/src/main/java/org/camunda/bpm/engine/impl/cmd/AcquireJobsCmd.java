@@ -118,16 +118,15 @@ public class AcquireJobsCmd implements Command<AcquiredJobs>, OptimisticLockingL
     // When CockroachDB is used, the transaction can't be
     // continued since the OLE can't be ignored, so it's completely retried.
     String databaseType = Context.getCommandContext().getProcessEngineConfiguration().getDatabaseType();
-    if (!operation.isIgnorable() && DbSqlSessionFactory.CRDB.equals(databaseType)) {
+    if (operation.isFatalFailure() && DbSqlSessionFactory.CRDB.equals(databaseType)) {
 
       return OptimisticLockingResult.RETRY;
-    } else if (operation.isIgnorable() && operation instanceof DbEntityOperation) {
+    } else if (!operation.isFatalFailure() && operation instanceof DbEntityOperation) {
 
       DbEntityOperation entityOperation = (DbEntityOperation) operation;
-      if(AcquirableJobEntity.class.isAssignableFrom(entityOperation.getEntityType())) {
-        // could not lock the job -> remove it from list of acquired jobs
-        acquiredJobs.removeJobId(entityOperation.getEntity().getId());
-      }
+      
+      // could not lock the job -> remove it from list of acquired jobs
+      acquiredJobs.removeJobId(entityOperation.getEntity().getId());
 
       // When the job that failed the lock with an OLE is removed,
       // we suppress the OLE.

@@ -398,9 +398,14 @@ public class DbEntityManager implements Session, EntityLoadListener {
         }
       }
     }
+    
+    if (handlingResult == OptimisticLockingResult.IGNORE && dbOperation.isFatalFailure()) {
+      // TODO: log error that an OptimisticLockingListener did not play nicely
+      handlingResult = OptimisticLockingResult.THROW;
+    }
 
     if (OptimisticLockingResult.THROW.equals(handlingResult)
-        && dbOperation.isIgnorable()) {
+        && canIgnoreHistoryModificationFailure(dbOperation)) {
         handlingResult = OptimisticLockingResult.IGNORE;
     }
 
@@ -412,6 +417,23 @@ public class DbEntityManager implements Session, EntityLoadListener {
       case THROW:
       default:
         throw LOG.concurrentUpdateDbEntityException(dbOperation);
+    }
+  }
+  
+  protected boolean canIgnoreHistoryModificationFailure(DbOperation dbOperation) {
+    DbEntity dbEntity = ((DbEntityOperation) dbOperation).getEntity();
+    return 
+        !dbOperation.isFatalFailure()
+        && Context.getProcessEngineConfiguration().isSkipHistoryOptimisticLockingExceptions()
+        && (dbEntity instanceof HistoricEntity || isHistoricByteArray(dbEntity));
+  }
+
+  protected boolean isHistoricByteArray(DbEntity dbEntity) {
+    if (dbEntity instanceof ByteArrayEntity) {
+      ByteArrayEntity byteArrayEntity = (ByteArrayEntity) dbEntity;
+      return byteArrayEntity.getType().equals(ResourceTypes.HISTORY.getValue());
+    } else {
+      return false;
     }
   }
 

@@ -77,7 +77,7 @@ public class BootstrapEngineCommand implements ProcessEngineBootstrapCommand {
           // When CockroachDB is used, the Process Engine bootstrap
           // is retried since the OLE can't be ignored.
           String databaseType = commandContext.getProcessEngineConfiguration().getDatabaseType();
-          if (DbSqlSessionFactory.CRDB.equals(databaseType)) {
+          if (operation.isFatalFailure() && DbSqlSessionFactory.CRDB.equals(databaseType)) {
             return OptimisticLockingResult.RETRY;
           }
 

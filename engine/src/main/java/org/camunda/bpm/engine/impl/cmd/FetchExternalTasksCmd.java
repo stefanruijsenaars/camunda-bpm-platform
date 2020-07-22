@@ -103,10 +103,10 @@ public class FetchExternalTasksCmd implements Command<List<LockedExternalTask>> 
         // When CockroachDB is used, the transaction can't be
         // continued since the OLE can't be ignored, so it's completely retried.
         String databaseType = commandContext.getProcessEngineConfiguration().getDatabaseType();
-        if (DbSqlSessionFactory.CRDB.equals(databaseType)) {
+        if (operation.isFatalFailure() && DbSqlSessionFactory.CRDB.equals(databaseType)) {
 
           return OptimisticLockingResult.RETRY;
-        } else if (operation.isIgnorable() && operation instanceof DbEntityOperation) {
+        } else if (!operation.isFatalFailure() && operation instanceof DbEntityOperation) {
           DbEntityOperation dbEntityOperation = (DbEntityOperation) operation;
           DbEntity dbEntity = dbEntityOperation.getEntity();
 

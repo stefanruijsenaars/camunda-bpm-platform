@@ -35,7 +35,11 @@ public abstract class DbOperation implements Recyclable {
   protected int rowsAffected;
   protected Exception failure;
   protected State state;
-  protected boolean ignorable;
+  
+  /**
+   * TODO: explain what fatal means
+   */
+  protected boolean isFatalFailure = false;
 
   /**
    * The type of the DbEntity this operation is executed on.
@@ -86,12 +90,12 @@ public abstract class DbOperation implements Recyclable {
     this.state = state;
   }
 
-  public boolean isIgnorable() {
-    return ignorable;
+  public boolean isFatalFailure() {
+    return isFatalFailure;
   }
 
-  public void setIgnorable(boolean ignorable) {
-    this.ignorable = ignorable;
+  public void setFatalFailure(boolean isFatalFailure) {
+    this.isFatalFailure = isFatalFailure;
   }
 
   public Exception getFailure() {

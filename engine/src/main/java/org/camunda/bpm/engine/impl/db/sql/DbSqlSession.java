@@ -142,16 +142,14 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
       operation.setFailure(failure);
 
       State failedState;
-      boolean ignorable = isFailureIgnorable(operation);
       if (isCrdbTransactionRetryException(failure)) {
-        ignorable = false;
+        operation.setFatalFailure(true);
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
       } else if (isConcurrentModificationException(operation, failure)) {
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
       } else {
         failedState = State.FAILED_ERROR;
       }
-      operation.setIgnorable(ignorable);
       operation.setState(failedState);
     } else {
       DbEntity dbEntity = operation.getEntity();
@@ -190,11 +188,9 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
       State failedState = State.FAILED_ERROR;
       if (isCrdbTransactionRetryException(failure)) {
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
+        operation.setFatalFailure(true);
       }
       operation.setState(failedState);
-
-      // Bulk operation failures can't be ignored.
-      operation.setIgnorable(false);
     } else {
       operation.setRowsAffected(rowsAffected);
       operation.setState(State.APPLIED);
@@ -210,9 +206,8 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
       DbOperation dependencyOperation = operation.getDependentOperation();
 
       State failedState;
-      boolean ignorable = isFailureIgnorable(operation);
       if (isCrdbTransactionRetryException(failure)) {
-        ignorable = false;
+        operation.setFatalFailure(true);
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
       } else if (isConcurrentModificationException(operation, failure)) {
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
@@ -223,7 +218,6 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
       } else {
         failedState = State.FAILED_ERROR;
       }
-      operation.setIgnorable(ignorable);
       operation.setState(failedState);
     } else {
       operation.setRowsAffected(rowsAffected);
@@ -290,24 +284,7 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
     return false;
   }
 
-  protected boolean isFailureIgnorable(DbOperation dbOperation) {
-    DbEntity dbEntity = ((DbEntityOperation) dbOperation).getEntity();
-    if (Context.getProcessEngineConfiguration().isSkipHistoryOptimisticLockingExceptions()
-        && (dbEntity instanceof HistoricEntity || isHistoricByteArray(dbEntity))) {
-      return true;
-    }
-
-    return false;
-  }
-
-  protected boolean isHistoricByteArray(DbEntity dbEntity) {
-    if (dbEntity instanceof ByteArrayEntity) {
-      ByteArrayEntity byteArrayEntity = (ByteArrayEntity) dbEntity;
-      return byteArrayEntity.getType().equals(ResourceTypes.HISTORY.getValue());
-    } else {
-      return false;
-    }
-  }
+  
 
   // insert //////////////////////////////////////////
 
@@ -338,16 +315,14 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
       operation.setFailure(failure);
 
       State failedState;
-      boolean ignorable = isFailureIgnorable(operation);
       if (isCrdbTransactionRetryException(failure)) {
-        ignorable = false;
+        operation.setFatalFailure(true);
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
       } else if (isConcurrentModificationException(operation, failure)) {
         failedState = State.FAILED_CONCURRENT_MODIFICATION;
       } else {
         failedState = State.FAILED_ERROR;
       }
-      operation.setIgnorable(ignorable);
       operation.setState(failedState);
     } else {
       // set revision of our copy to 1
