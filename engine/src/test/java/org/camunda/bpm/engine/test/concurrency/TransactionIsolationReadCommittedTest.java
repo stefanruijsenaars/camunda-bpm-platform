@@ -24,9 +24,11 @@ import org.camunda.bpm.engine.history.HistoricProcessInstance;
 import org.camunda.bpm.engine.impl.context.Context;
 import org.camunda.bpm.engine.impl.db.entitymanager.DbEntityManager;
 import org.camunda.bpm.engine.impl.db.entitymanager.DbEntityManagerFactory;
+import org.camunda.bpm.engine.impl.db.sql.DbSqlSessionFactory;
 import org.camunda.bpm.engine.impl.history.event.HistoricProcessInstanceEventEntity;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.test.RequiredDatabase;
 import org.camunda.bpm.engine.test.RequiredHistoryLevel;
 
 /**
@@ -34,7 +36,8 @@ import org.camunda.bpm.engine.test.RequiredHistoryLevel;
  *
  */
 @RequiredHistoryLevel(ProcessEngineConfiguration.HISTORY_ACTIVITY)
-public class DbDeadlockTest extends ConcurrencyTestCase {
+@RequiredDatabase(excludes = {DbSqlSessionFactory.CRDB })
+public class TransactionIsolationReadCommittedTest extends ConcurrencyTestCase {
 
   private ThreadControl thread1;
   private ThreadControl thread2;
@@ -58,10 +61,6 @@ public class DbDeadlockTest extends ConcurrencyTestCase {
    * Deadlocks may occur if readers are not properly isolated from writers.
    *
    */
-  
-  // TODO: ignore on CockroachDB and at a later point create dedicated concurrency test cases
-  // for CockroachDB that reproduce the scenarios described in https://docs.google.com/document/d/1jf1hsFoLBL0xAkwasV2-S5uf0iGw93FITwMMLJVZjz0/edit 
-  // and verify that our implementation can handle them
   public void testTransactionIsolation() {
 
     thread1 = executeControllableCommand(new TestCommand("p1"));

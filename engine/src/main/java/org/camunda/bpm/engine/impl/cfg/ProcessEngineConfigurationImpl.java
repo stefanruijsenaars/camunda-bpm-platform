@@ -924,6 +924,10 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     initBusinessCalendarManager();
     initCommandContextFactory();
     initTransactionContextFactory();
+
+    // Database type needs to be detected before CommandExecutors are initialized
+    initDataSource();
+
     initCommandExecutors();
     initServices();
     initIdGenerator();
@@ -933,7 +937,6 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     initExternalTaskPriorityProvider();
     initBatchHandlers();
     initJobExecutor();
-    initDataSource();
     initTransactionFactory();
     initSqlSessionFactory();
     initIdentityProviderSessionFactory();

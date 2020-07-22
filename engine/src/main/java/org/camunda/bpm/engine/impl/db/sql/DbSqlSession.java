@@ -46,17 +46,14 @@ import org.camunda.bpm.engine.impl.db.DbEntity;
 import org.camunda.bpm.engine.impl.db.EnginePersistenceLogger;
 import org.camunda.bpm.engine.impl.db.HasDbReferences;
 import org.camunda.bpm.engine.impl.db.HasDbRevision;
-import org.camunda.bpm.engine.impl.db.HistoricEntity;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbBulkOperation;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbEntityOperation;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperation;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperation.State;
 import org.camunda.bpm.engine.impl.db.entitymanager.operation.DbOperationType;
-import org.camunda.bpm.engine.impl.persistence.entity.ByteArrayEntity;
 import org.camunda.bpm.engine.impl.util.ExceptionUtil;
 import org.camunda.bpm.engine.impl.util.IoUtil;
 import org.camunda.bpm.engine.impl.util.ReflectUtil;
-import org.camunda.bpm.engine.repository.ResourceTypes;
 
 /**
 *
@@ -138,19 +135,7 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
 
   protected void entityUpdatePerformed(DbEntityOperation operation, int rowsAffected, Exception failure) {
     if (failure != null) {
-      operation.setRowsAffected(0);
-      operation.setFailure(failure);
-
-      State failedState;
-      if (isCrdbTransactionRetryException(failure)) {
-        operation.setFatalFailure(true);
-        failedState = State.FAILED_CONCURRENT_MODIFICATION;
-      } else if (isConcurrentModificationException(operation, failure)) {
-        failedState = State.FAILED_CONCURRENT_MODIFICATION;
-      } else {
-        failedState = State.FAILED_ERROR;
-      }
-      operation.setState(failedState);
+      configureFailedDbEntityOperation(operation, failure);
     } else {
       DbEntity dbEntity = operation.getEntity();
 
@@ -198,27 +183,9 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
   }
 
   protected void entityDeletePerformed(DbEntityOperation operation, int rowsAffected, Exception failure) {
-    
+
     if (failure != null) {
-      operation.setRowsAffected(0);
-      operation.setFailure(failure);
-
-      DbOperation dependencyOperation = operation.getDependentOperation();
-
-      State failedState;
-      if (isCrdbTransactionRetryException(failure)) {
-        operation.setFatalFailure(true);
-        failedState = State.FAILED_CONCURRENT_MODIFICATION;
-      } else if (isConcurrentModificationException(operation, failure)) {
-        failedState = State.FAILED_CONCURRENT_MODIFICATION;
-      } else if (dependencyOperation != null && dependencyOperation.getState() != null && dependencyOperation.getState() != State.APPLIED) {
-        // the owning operation was not successful, so the prerequisite for this operation was not given
-        LOG.ignoreFailureDuePreconditionNotMet(operation, "Parent database operation failed", dependencyOperation);
-        failedState = State.NOT_APPLIED;
-      } else {
-        failedState = State.FAILED_ERROR;
-      }
-      operation.setState(failedState);
+      configureFailedDbEntityOperation(operation, failure);
     } else {
       operation.setRowsAffected(rowsAffected);
 
@@ -231,6 +198,36 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
         operation.setState(State.APPLIED);
       }
     }
+  }
+
+  protected void configureFailedDbEntityOperation(DbEntityOperation operation, Exception failure) {
+    operation.setRowsAffected(0);
+    operation.setFailure(failure);
+
+    DbOperationType operationType = operation.getOperationType();
+    DbOperation dependencyOperation = operation.getDependentOperation();
+
+    State failedState;
+    if (isCrdbTransactionRetryException(failure)) {
+
+      operation.setFatalFailure(true);
+      failedState = State.FAILED_CONCURRENT_MODIFICATION;
+    } else if (isConcurrentModificationException(operation, failure)) {
+
+      failedState = State.FAILED_CONCURRENT_MODIFICATION;
+    } else if (DbOperationType.DELETE.equals(operationType)
+              && dependencyOperation != null
+              && dependencyOperation.getState() != null
+              && dependencyOperation.getState() != State.APPLIED) {
+
+      // the owning operation was not successful, so the prerequisite for this operation was not given
+      LOG.ignoreFailureDuePreconditionNotMet(operation, "Parent database operation failed", dependencyOperation);
+      failedState = State.NOT_APPLIED;
+    } else {
+
+      failedState = State.FAILED_ERROR;
+    }
+    operation.setState(failedState);
   }
 
   protected boolean isConcurrentModificationException(DbOperation failedOperation, Throwable cause) {
@@ -311,19 +308,7 @@ public abstract class DbSqlSession extends AbstractPersistenceSession {
     DbEntity entity = operation.getEntity();
 
     if (failure != null) {
-      operation.setRowsAffected(0);
-      operation.setFailure(failure);
-
-      State failedState;
-      if (isCrdbTransactionRetryException(failure)) {
-        operation.setFatalFailure(true);
-        failedState = State.FAILED_CONCURRENT_MODIFICATION;
-      } else if (isConcurrentModificationException(operation, failure)) {
-        failedState = State.FAILED_CONCURRENT_MODIFICATION;
-      } else {
-        failedState = State.FAILED_ERROR;
-      }
-      operation.setState(failedState);
+      configureFailedDbEntityOperation(operation, failure);
     } else {
       // set revision of our copy to 1
       if (entity instanceof HasDbRevision) {

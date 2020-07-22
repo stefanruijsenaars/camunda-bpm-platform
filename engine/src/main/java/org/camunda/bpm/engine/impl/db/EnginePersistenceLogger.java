@@ -811,4 +811,13 @@ public class EnginePersistenceLogger extends ProcessEngineLogger {
     ));
   }
 
+  public void fatalFailureOperationIgnored(DbOperation operation) {
+    logError(
+      "103",
+      "An OptimisticLockingListener attempted to ignore a fatal failure of: {}. " +
+        "If encountered, please report this failure to the Camunda development team.",
+      operation
+    );
+  }
+
 }

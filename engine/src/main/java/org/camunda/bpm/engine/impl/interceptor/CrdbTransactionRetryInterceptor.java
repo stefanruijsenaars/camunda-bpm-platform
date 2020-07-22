@@ -25,12 +25,9 @@ public class CrdbTransactionRetryInterceptor extends CommandInterceptor {
 
   private static final CommandLogger LOG = ProcessEngineLogger.CMD_LOGGER;
 
-  // TODO: this interceptor must come before the command context interceptor 
-  //    => so that the retry is made with a fresh tx
   // TODO: how to address this in the managed tx case? should not make a retry
   //   if the tx is externally managed, but ideally we do make a retry if the
   //   tx is begun when the Camunda command starts
-  // TODO: debug logging for the retries; 
   // TODO: make retries configurable
   
   @Override
@@ -44,8 +41,10 @@ public class CrdbTransactionRetryInterceptor extends CommandInterceptor {
       } catch (CrdbTransactionRetryException e) {
         if (retries == 0) {
           throw new OptimisticLockingException(e.getMessage());
+        } else {
+          LOG.crdbTransactionRetryAttempt(e);
+          retries--;
         }
-        retries--;
       }
     }
 

@@ -399,8 +399,8 @@ public class DbEntityManager implements Session, EntityLoadListener {
       }
     }
     
-    if (handlingResult == OptimisticLockingResult.IGNORE && dbOperation.isFatalFailure()) {
-      // TODO: log error that an OptimisticLockingListener did not play nicely
+    if (OptimisticLockingResult.IGNORE.equals(handlingResult) && dbOperation.isFatalFailure()) {
+      LOG.fatalFailureOperationIgnored(dbOperation);
       handlingResult = OptimisticLockingResult.THROW;
     }
 
@@ -419,7 +419,14 @@ public class DbEntityManager implements Session, EntityLoadListener {
         throw LOG.concurrentUpdateDbEntityException(dbOperation);
     }
   }
-  
+
+  /**
+   * Determines if a failed database operation (OptimisticLockingException)
+   * on a Historic entity can be ignored.
+   *
+   * @param dbOperation that failed
+   * @return true if the failure can be ignored
+   */
   protected boolean canIgnoreHistoryModificationFailure(DbOperation dbOperation) {
     DbEntity dbEntity = ((DbEntityOperation) dbOperation).getEntity();
     return 

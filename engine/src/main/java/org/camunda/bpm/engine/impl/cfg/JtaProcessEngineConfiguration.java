@@ -69,11 +69,12 @@ public class JtaProcessEngineConfiguration extends ProcessEngineConfigurationImp
     defaultCommandInterceptorsTxRequired.add(new LogInterceptor());
     defaultCommandInterceptorsTxRequired.add(new ProcessApplicationContextInterceptor(this));
     defaultCommandInterceptorsTxRequired.add(new JtaTransactionInterceptor(transactionManager, false));
-    defaultCommandInterceptorsTxRequired.add(new CommandContextInterceptor(commandContextFactory, this));
 
     if (DbSqlSessionFactory.CRDB.equals(databaseType)) {
       defaultCommandInterceptorsTxRequired.add(new CrdbTransactionRetryInterceptor());
     }
+
+    defaultCommandInterceptorsTxRequired.add(new CommandContextInterceptor(commandContextFactory, this));
 
     return defaultCommandInterceptorsTxRequired;
   }
@@ -84,11 +85,12 @@ public class JtaProcessEngineConfiguration extends ProcessEngineConfigurationImp
     defaultCommandInterceptorsTxRequiresNew.add(new LogInterceptor());
     defaultCommandInterceptorsTxRequiresNew.add(new ProcessApplicationContextInterceptor(this));
     defaultCommandInterceptorsTxRequiresNew.add(new JtaTransactionInterceptor(transactionManager, true));
-    defaultCommandInterceptorsTxRequiresNew.add(new CommandContextInterceptor(commandContextFactory, this, true));
 
     if (DbSqlSessionFactory.CRDB.equals(databaseType)) {
       defaultCommandInterceptorsTxRequiresNew.add(new CrdbTransactionRetryInterceptor());
     }
+
+    defaultCommandInterceptorsTxRequiresNew.add(new CommandContextInterceptor(commandContextFactory, this, true));
 
     return defaultCommandInterceptorsTxRequiresNew;
   }
