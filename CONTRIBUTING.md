@@ -51,18 +51,19 @@ Best practices for writing test cases:
   ```
 * Project `camunda-engine`: If you need a process engine with custom configuration, use the JUnit rule `org.camunda.bpm.engine.test.util.ProcessEngineBootstrapRule` and chain it with `org.camunda.bpm.engine.test.util.ProvidedProcessEngineRule` like so:
   ```
-  protected ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule() {
-    public ProcessEngineConfiguration configureEngine(ProcessEngineConfigurationImpl configuration) {
+  protected ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule(configuration -> {
       // apply configuration options here
-
-      return configuration;
-    }
-  };
+  });
   protected ProvidedProcessEngineRule engineRule = new ProvidedProcessEngineRule(bootstrapRule);
 
   @Rule
   public RuleChain ruleChain = RuleChain.outerRule(bootstrapRule).around(engineRule);
   ```
+* Some Test classes extend the `org.camunda.bpm.engine.test.util.PluggableProcessEngineTest` class. This is a 
+  compatibility class to ease the transition of Test classes from JUnit3 to JUnit4. If you need to modify the 
+  `ProcessEngineConfiguration` in a class that extends `PluggableProcessEngineTest`, please remove 
+  the `extends PluggableProcessEngineTest` inheritance, and add the necessary JUnit4 Rules and Process Engine Services 
+  directly in the class you are modifying, as described in the point above.
 
 
 ## Coding styles
