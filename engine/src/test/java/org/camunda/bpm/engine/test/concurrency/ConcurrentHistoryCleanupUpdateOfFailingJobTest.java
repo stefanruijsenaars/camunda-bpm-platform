@@ -31,19 +31,21 @@ import org.camunda.bpm.engine.test.util.ProcessEngineTestRule;
 import org.camunda.bpm.engine.test.util.ProvidedProcessEngineRule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 
 public class ConcurrentHistoryCleanupUpdateOfFailingJobTest extends ConcurrencyTestHelper {
 
-  protected ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule(configuration ->
+  @ClassRule
+  public static ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule(configuration ->
       configuration.setHistoryCleanupBatchWindowStartTime("00:00"));
   protected ProcessEngineRule engineRule = new ProvidedProcessEngineRule(bootstrapRule);
   protected ProcessEngineTestRule testRule = new ProcessEngineTestRule(engineRule);
   
   @Rule
-  public RuleChain ruleChain = RuleChain.outerRule(bootstrapRule).around(engineRule).around(testRule);
+  public RuleChain ruleChain = RuleChain.outerRule(engineRule).around(testRule);
 
   protected HistoryService historyService;
   protected ManagementService managementService;

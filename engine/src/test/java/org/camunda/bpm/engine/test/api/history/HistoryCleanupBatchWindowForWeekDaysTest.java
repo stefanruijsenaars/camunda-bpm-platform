@@ -43,6 +43,7 @@ import org.camunda.bpm.engine.test.util.ProcessEngineTestRule;
 import org.camunda.bpm.engine.test.util.ProvidedProcessEngineRule;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -62,32 +63,29 @@ public class HistoryCleanupBatchWindowForWeekDaysTest {
   protected String defaultEndTime;
   protected int defaultBatchSize;
 
-  protected ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule() {
-    public ProcessEngineConfiguration configureEngine(ProcessEngineConfigurationImpl configuration) {
-      configuration.setHistoryCleanupBatchSize(20);
-      configuration.setHistoryCleanupBatchThreshold(10);
-      configuration.setDefaultNumberOfRetries(5);
+  @ClassRule
+  public static ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule(configuration -> {
+    configuration.setHistoryCleanupBatchSize(20);
+    configuration.setHistoryCleanupBatchThreshold(10);
+    configuration.setDefaultNumberOfRetries(5);
 
-      configuration.setMondayHistoryCleanupBatchWindowStartTime("22:00");
-      configuration.setMondayHistoryCleanupBatchWindowEndTime("01:00");
-      configuration.setTuesdayHistoryCleanupBatchWindowStartTime("22:00");
-      configuration.setTuesdayHistoryCleanupBatchWindowEndTime("23:00");
-      configuration.setWednesdayHistoryCleanupBatchWindowStartTime("15:00");
-      configuration.setWednesdayHistoryCleanupBatchWindowEndTime("20:00");
-      configuration.setFridayHistoryCleanupBatchWindowStartTime("22:00");
-      configuration.setFridayHistoryCleanupBatchWindowEndTime("01:00");
-      configuration.setSundayHistoryCleanupBatchWindowStartTime("10:00");
-      configuration.setSundayHistoryCleanupBatchWindowEndTime("20:00");
-
-      return configuration;
-    }
-  };
+    configuration.setMondayHistoryCleanupBatchWindowStartTime("22:00");
+    configuration.setMondayHistoryCleanupBatchWindowEndTime("01:00");
+    configuration.setTuesdayHistoryCleanupBatchWindowStartTime("22:00");
+    configuration.setTuesdayHistoryCleanupBatchWindowEndTime("23:00");
+    configuration.setWednesdayHistoryCleanupBatchWindowStartTime("15:00");
+    configuration.setWednesdayHistoryCleanupBatchWindowEndTime("20:00");
+    configuration.setFridayHistoryCleanupBatchWindowStartTime("22:00");
+    configuration.setFridayHistoryCleanupBatchWindowEndTime("01:00");
+    configuration.setSundayHistoryCleanupBatchWindowStartTime("10:00");
+    configuration.setSundayHistoryCleanupBatchWindowEndTime("20:00");
+  });
 
   protected ProvidedProcessEngineRule engineRule = new ProvidedProcessEngineRule(bootstrapRule);
-  public ProcessEngineTestRule testRule = new ProcessEngineTestRule(engineRule);
+  protected ProcessEngineTestRule testRule = new ProcessEngineTestRule(engineRule);
 
   @Rule
-  public RuleChain ruleChain = RuleChain.outerRule(bootstrapRule).around(engineRule).around(testRule);
+  public RuleChain ruleChain = RuleChain.outerRule(engineRule).around(testRule);
 
   private HistoryService historyService;
   private ManagementService managementService;

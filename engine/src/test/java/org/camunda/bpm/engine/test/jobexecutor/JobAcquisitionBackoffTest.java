@@ -31,6 +31,7 @@ import org.camunda.bpm.engine.test.util.ProvidedProcessEngineRule;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -47,16 +48,12 @@ public class JobAcquisitionBackoffTest {
   protected static final int BACKOFF_DECREASE_THRESHOLD = 2;
   protected static final int DEFAULT_NUM_JOBS_TO_ACQUIRE = 3;
 
-  protected ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule() {
-    @Override
-    public ProcessEngineConfiguration configureEngine(ProcessEngineConfigurationImpl configuration) {
-      return configuration.setJobExecutor(new ControllableJobExecutor());
-    }
-  };
-  protected ProcessEngineRule engineRule = new ProvidedProcessEngineRule(bootstrapRule);
+  @ClassRule
+  public static ProcessEngineBootstrapRule bootstrapRule = new ProcessEngineBootstrapRule(configuration ->
+      configuration.setJobExecutor(new ControllableJobExecutor()));
 
   @Rule
-  public RuleChain ruleChain = RuleChain.outerRule(bootstrapRule).around(engineRule);
+  public ProcessEngineRule engineRule = new ProvidedProcessEngineRule(bootstrapRule);
 
   protected ControllableJobExecutor jobExecutor1;
   protected ControllableJobExecutor jobExecutor2;
