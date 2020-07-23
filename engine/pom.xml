@@ -657,10 +657,7 @@
               <trimStackTrace>false</trimStackTrace>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
               <excludes combine.children="append">
-                <exclude>**/CompetingMessageCorrelationTest.java</exclude>
-                <exclude>**/DbDeadlockTest.java</exclude>
-                <exclude>**/CompetingHistoricVariableInstancePartitioningTest.java</exclude>
-                <exclude>**/CompetingHistoricByteArrayPartitioningTest.java</exclude>
+                <exclude>**/concurrency/*Test.java</exclude>
               </excludes>
             </configuration>
           </plugin>
