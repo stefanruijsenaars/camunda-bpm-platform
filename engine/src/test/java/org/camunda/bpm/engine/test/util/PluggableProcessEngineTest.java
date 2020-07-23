@@ -33,35 +33,19 @@ import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
-import org.camunda.bpm.engine.impl.cmmn.entity.runtime.CaseSentryPartQueryImpl;
-import org.camunda.bpm.engine.impl.cmmn.execution.CmmnExecution;
 import org.camunda.bpm.engine.impl.interceptor.Command;
-import org.camunda.bpm.engine.impl.interceptor.CommandContext;
-import org.camunda.bpm.engine.impl.interceptor.CommandExecutor;
 import org.camunda.bpm.engine.impl.persistence.entity.JobEntity;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
 import org.camunda.bpm.engine.runtime.ActivityInstance;
-import org.camunda.bpm.engine.runtime.CaseExecution;
-import org.camunda.bpm.engine.runtime.CaseInstance;
 import org.camunda.bpm.engine.runtime.Job;
-import org.camunda.bpm.engine.variable.VariableMap;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 
 
-/** Base class for the process engine test cases.
- *
- * The main reason not to use our own test support classes is that we need to
- * run our test suite with various configurations, e.g. with and without spring,
- * standalone or on a server etc.  Those requirements create some complications
- * so we think it's best to use a separate base class.  That way it is much easier
- * for us to maintain our own codebase and at the same time provide stability
- * on the test support classes that we offer as part of our api (in org.camunda.bpm.engine.test).
- *
- * @author Tom Baeyens
- * @author Joram Barrez
+/**
+ * Base class for the process engine test cases.
  */
 public class PluggableProcessEngineTest {
 
